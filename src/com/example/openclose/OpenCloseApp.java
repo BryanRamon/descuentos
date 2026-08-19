@@ -19,5 +19,7 @@ public class OpenCloseApp {
         precioFinal = descuento.aplicarDescuento(precioFinal);
         // Mostramos el resultado final (80 soles)
         System.out.format("Precio final: S/%.2f", precioFinal);
+        double divi = 10 / 0;
+        System.out.println(divi);
     }
 }
