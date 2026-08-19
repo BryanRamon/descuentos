@@ -1,0 +1,85 @@
+name: Pipeline - Proyecto Descuentos
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+
+  pipeline:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: 1. Descargar código
+        uses: actions/checkout@v6
+
+      - name: 2. Configurar Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: 3. Compilar aplicación
+        run: |
+          echo "=============================="
+          echo "BUILD - Compilando proyecto"
+          echo "=============================="
+
+          mkdir -p build/classes
+
+          javac -d build/classes $(find src -name "*.java")
+
+          echo "BUILD EXITOSO"
+
+      - name: 4. Ejecutar prueba
+        run: |
+          echo "=============================="
+          echo "TEST - Probando aplicación"
+          echo "=============================="
+
+          RESULTADO=$(java -cp build/classes com.example.openclose.OpenCloseApp)
+
+          echo "Resultado obtenido:"
+          echo "$RESULTADO"
+
+          if [[ "$RESULTADO" == *"Precio final"* ]]; then
+              echo "TEST EXITOSO"
+          else
+              echo "TEST FALLIDO"
+              exit 1
+          fi
+
+      - name: 5. Control de seguridad
+        run: |
+          echo "=============================="
+          echo "SECURITY - Analizando código"
+          echo "=============================="
+
+          if grep -RniE '(password|secret|token)[[:space:]]*=' src; then
+              echo "Posible información sensible encontrada"
+              exit 1
+          else
+              echo "SECURITY CHECK EXITOSO"
+          fi
+
+      - name: 6. Despliegue simulado
+        run: |
+          echo "=============================="
+          echo "DEPLOY - Iniciando despliegue"
+          echo "=============================="
+
+          mkdir -p staging
+          cp -r build/classes/* staging/
+
+          echo "Aplicación enviada a STAGING"
+          echo "DESPLIEGUE EXITOSO"
+          echo "Versión desplegada:"
+          echo "$GITHUB_SHA"
